@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+// Change this to your actual backend URL
+const API_URL = 'https://openmindsbackend.onrender.com/api';
+
 function AdminUserCreation() {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -26,7 +29,8 @@ function AdminUserCreation() {
     setSuccess(false);
 
     try {
-      const response = await axios.post('/api/auth/admin/create-user', formData, {
+      // Use the full URL with the API_URL constant
+      const response = await axios.post(`${API_URL}/auth/admin/create-user`, formData, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`

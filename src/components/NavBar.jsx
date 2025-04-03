@@ -4,6 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import logo from './images/logo.png';
 
+// Change this to your actual backend URL
+const API_URL = 'https://openmindsbackend.onrender.com/api';
+
 const NavBar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
@@ -73,7 +76,8 @@ const NavBar = () => {
     setSuccess(false);
 
     try {
-      const response = await axios.post('/api/auth/admin/create-user', formData, {
+      // Use the full URL with the API_URL constant
+      const response = await axios.post(`${API_URL}/auth/admin/create-user`, formData, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
