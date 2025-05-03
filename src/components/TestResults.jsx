@@ -119,6 +119,13 @@ const TestResults = () => {
     return result.user_email || '';
   };
 
+  const getMaxScore = (result) => {
+    if (result.testPaperId && testPaperData[result.testPaperId]) {
+      return testPaperData[result.testPaperId].max_score;
+    }
+    return result.max_score || 100;
+  }
+
   // Handle back button
   const handleBack = () => {
     navigate('/');
@@ -186,27 +193,8 @@ const TestResults = () => {
 
       <div className="bg-white shadow-md rounded-lg p-6 mb-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-4">
-          Results for: {testPaper?.name || 'Test Paper'}
+          Total {stats.attempts} Attempts for {testPaper?.name || 'Test Paper'}
         </h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-500">Total Attempts</p>
-            <p className="text-2xl font-bold text-blue-600">{stats.attempts}</p>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-500">Average Score</p>
-            <p className="text-2xl font-bold text-green-600">{stats.avg.toFixed(1)}%</p>
-          </div>
-          <div className="bg-indigo-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-500">Highest Score</p>
-            <p className="text-2xl font-bold text-indigo-600">{stats.highest.toFixed(1)}%</p>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-500">Lowest Score</p>
-            <p className="text-2xl font-bold text-purple-600">{stats.lowest.toFixed(1)}%</p>
-          </div>
-        </div>
       </div>
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -229,9 +217,9 @@ const TestResults = () => {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Score
                   </th>
-                  {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Questions Correct
-                  </th> */}
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Percentage
+                  </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Submitted At
                   </th>
@@ -252,18 +240,20 @@ const TestResults = () => {
                         <div className="text-sm font-medium text-gray-900">
                           {getUserDisplayName(result)}
                         </div>
-                        <div className="text-sm text-gray-500">{getUserEmail(result)}</div>
+                        <div className="text-sm text-gray-500">
+                          {getUserEmail(result)}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           {result.final_score}
                         </div>
                       </td>
-                      {/* <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {result.correct_answers || result.score || 0} / {result.total_questions || result.total_score || 0}
+                          {result.final_score/getMaxScore(result) * 100}%
                         </div>
-                      </td> */}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formattedDate}
                       </td>
