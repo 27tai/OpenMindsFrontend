@@ -280,7 +280,7 @@ const TestQuestions = () => {
     setSelectedAnswers(prev => {
       const updated = {
         ...prev,
-        [questionId]: optionIndex
+        [questionId]: prev[questionId] === optionIndex ? null : optionIndex
       };
       console.log('[TEST-QUESTIONS] Updated selected answers:', updated);
       return updated;
