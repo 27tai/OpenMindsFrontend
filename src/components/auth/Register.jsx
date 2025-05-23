@@ -30,11 +30,6 @@ const Register = () => {
   const [registerSuccess, setRegisterSuccess] = useState(false);
   const [registerError, setRegisterError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
-  const [showCamera, setShowCamera] = useState(false);
-  const [capturedImage, setCapturedImage] = useState(null);
-  const videoRef = React.useRef(null);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
   
   // Initialize form data from userData if coming from login
   useEffect(() => {
@@ -284,57 +279,6 @@ const Register = () => {
       }
     }
   };
-
-  const startCamera = async () => {
-    try {
-      const constraints = {
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "user"
-        }
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        // Add onloadedmetadata event handler
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play();
-          console.log("Video stream started");
-        };
-        setShowCamera(true);
-        setIsCameraOpen(true);
-      }
-    } catch (err) {
-      console.error("Error accessing camera:", err);
-      // Add user feedback for camera errors
-      setRegisterError("Failed to access camera. Please check your camera permissions.");
-    }
-  };
-
-  const capturePhoto = () => {
-    if (videoRef.current) {
-      const canvas = document.createElement('canvas');
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
-      const imageData = canvas.toDataURL('image/jpeg');
-      setCapturedImage(imageData);
-      stopCamera();
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-      setShowCamera(false);
-      setIsCameraOpen(false);
-    }
-  };
   
   if (registerSuccess) {
     return (
@@ -477,73 +421,6 @@ const Register = () => {
             {formErrors.date_of_birth && (
               <p className="text-red-500 text-xs mt-1">{formErrors.date_of_birth}</p>
             )}
-          </div>
-
-          {/* Camera Section */}
-          <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700">Profile Photo</label>
-            <div className="mt-2 flex flex-col items-center">
-              {showCamera ? (
-                <div className="relative w-full max-w-sm">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full rounded-lg"
-                    style={{ transform: 'scaleX(-1)' }}
-                  />
-                  {cameraError && (
-                    <div className="text-red-500 text-sm mt-2">{cameraError}</div>
-                  )}
-                  <div className="mt-2 flex justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={capturePhoto}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                    >
-                      Capture
-                    </button>
-                    <button
-                      type="button"
-                      onClick={stopCamera}
-                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center">
-                  {capturedImage ? (
-                    <div className="relative">
-                      <img
-                        src={capturedImage}
-                        alt="Captured"
-                        className="w-32 h-32 rounded-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setCapturedImage(null)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={startCamera}
-                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                    >
-                      Open Camera
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
           </div>
           
           {/* Only show password fields for new registrations */}
