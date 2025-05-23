@@ -127,16 +127,34 @@ const Register = () => {
     return Object.keys(errors).length === 0;
   };
 
+  // Cleanup effect to stop camera when component unmounts
+  useEffect(() => {
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+    };
+  }, []);
+
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' }
-      });
+      const constraints = {
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user'
+        },
+        audio: false
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        await videoRef.current.play(); // Ensure video starts playing
+        setShowCamera(true);
+        setCameraError(null);
       }
-      setShowCamera(true);
-      setCameraError(null);
     } catch (err) {
       console.error('Camera error:', err);
       setCameraError('Could not access camera. Please check permissions.');
@@ -145,9 +163,13 @@ const Register = () => {
 
   const stopCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
+      const stream = videoRef.current.srcObject;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => {
+        track.stop(); // Stop each track
+        stream.removeTrack(track); // Remove track from stream
+      });
+      videoRef.current.srcObject = null; // Clear video source
     }
     setShowCamera(false);
   };
@@ -481,10 +503,10 @@ const Register = () => {
                     playsInline
                     muted
                     className="w-full rounded-lg border border-gray-300"
-                    style={{ transform: 'scaleX(-1)' }}
-                    onCanPlay={(e) => {
-                      e.target.play();
-                      console.log('Video is playing');
+                    style={{ 
+                      transform: 'scaleX(-1)',
+                      maxHeight: '400px',
+                      backgroundColor: '#000' // Add background color
                     }}
                   />
                   <div className="mt-2 flex justify-center gap-2">
