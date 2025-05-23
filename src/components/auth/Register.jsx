@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
@@ -30,6 +30,11 @@ const Register = () => {
   const [registerSuccess, setRegisterSuccess] = useState(false);
   const [registerError, setRegisterError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  const [showCamera, setShowCamera] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const videoRef = useRef(null);
+  const [cameraError, setCameraError] = useState(null);
   
   // Initialize form data from userData if coming from login
   useEffect(() => {
@@ -120,6 +125,44 @@ const Register = () => {
     
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' }
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setShowCamera(true);
+      setCameraError(null);
+    } catch (err) {
+      console.error('Camera error:', err);
+      setCameraError('Could not access camera. Please check permissions.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoRef.current, 0, 0);
+      const imageData = canvas.toDataURL('image/jpeg');
+      setCapturedImage(imageData);
+      stopCamera();
+    }
   };
   
   const handleSubmit = async (e) => {
@@ -421,6 +464,83 @@ const Register = () => {
             {formErrors.date_of_birth && (
               <p className="text-red-500 text-xs mt-1">{formErrors.date_of_birth}</p>
             )}
+          </div>
+
+          {/* Camera Section */}
+          <div className="space-y-4 mb-6">
+            <label className="block text-sm font-medium text-gray-700">
+              Profile Photo
+            </label>
+            
+            <div className="flex flex-col items-center space-y-4">
+              {showCamera ? (
+                <div className="relative w-full max-w-sm">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full rounded-lg border border-gray-300"
+                    style={{ transform: 'scaleX(-1)' }}
+                    onCanPlay={(e) => {
+                      e.target.play();
+                      console.log('Video is playing');
+                    }}
+                  />
+                  <div className="mt-2 flex justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={capturePhoto}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    >
+                      Take Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  {capturedImage ? (
+                    <div className="relative inline-block">
+                      <img
+                        src={capturedImage}
+                        alt="Captured"
+                        className="w-48 h-48 rounded-full object-cover border-4 border-indigo-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCapturedImage(null)}
+                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={startCamera}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                      </svg>
+                      Open Camera
+                    </button>
+                  )}
+                  {cameraError && (
+                    <p className="mt-2 text-sm text-red-600">{cameraError}</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Only show password fields for new registrations */}
