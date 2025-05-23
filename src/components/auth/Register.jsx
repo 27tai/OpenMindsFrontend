@@ -287,14 +287,30 @@ const Register = () => {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const constraints = {
+        video: {
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: "user"
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // Add onloadedmetadata event handler
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play();
+          console.log("Video stream started");
+        };
         setShowCamera(true);
         setIsCameraOpen(true);
       }
     } catch (err) {
       console.error("Error accessing camera:", err);
+      // Add user feedback for camera errors
+      setRegisterError("Failed to access camera. Please check your camera permissions.");
     }
   };
 
@@ -473,8 +489,13 @@ const Register = () => {
                     ref={videoRef}
                     autoPlay
                     playsInline
+                    muted
                     className="w-full rounded-lg"
+                    style={{ transform: 'scaleX(-1)' }}
                   />
+                  {cameraError && (
+                    <div className="text-red-500 text-sm mt-2">{cameraError}</div>
+                  )}
                   <div className="mt-2 flex justify-center gap-2">
                     <button
                       type="button"
